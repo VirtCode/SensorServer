@@ -5,8 +5,8 @@ TCP sockets and transmit sensor data in realtime to this server. The data is
 then saved in CSV files and can be analyzed or further processed easily.
 
 ## Installation
-To obtain SensorServer, simply download a built release from the releases
-page, and place it in a directory you know. To run these releases, make sure
+To obtain a built JAR, simply download a release from the releases
+section, and place it in a directory you know. To run these releases, make sure
 you have a JRE of version 17 or higher installed and in your path.
 
 Additionally, you can build a JAR yourself by cloning the repository and
@@ -24,8 +24,8 @@ java -jar SensorServer-v0.2.jar [OPTIONS]
 The following options are supported:
 - **--help** - Display help information and exit
 - **--version** - Show version info and exit
-- **--output** <PATH> - Specify the directory where the data should be saved
-- **--port** <PORT> - Specify the port the server should run on
+- **--output** \<PATH> - Specify the directory where the data should be saved
+- **--port** \<PORT> - Specify the port the server should run on
 
 By default, the server runs on port `55555` and saves the data to the working
 directory.
@@ -53,5 +53,5 @@ about this protocol, head to the *file what will document the protocol but hasn'
 been crated yet*.
 
 ## License
-This application is licensed under the MIT license. Take a look at the LICENSE file
+This application is licensed under the MIT license. Take a look at the `LICENSE.txt` file
 for more information.
