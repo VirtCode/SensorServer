@@ -5,86 +5,79 @@ import java.io.IOException;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.nio.ByteBuffer;
+import java.sql.SQLOutput;
 
 public class Main {
+
+    private static final String VERSION = "v0.2";
+
+    private static final String OUTPUT = ".";
+    private static final int PORT = 55555;
+
+    private static final String HELP_TEXT =
+            """
+                    SensorServer data receiver
+
+                    Usage: java -jar SensorServer.jar [OPTIONS]
+                                
+                    Options:
+                    -v, --version           Print version info and exit
+                    -o, --output <PATH>     Set output directory, default %s
+                    -p, --port <PORT>       Set port number, default %d
+                                
+                    -h, --help              Display help information and exit
+                    
+                    """.formatted(OUTPUT, PORT);
+
+    private static final String VERSION_TEXT = "SensorServer %s".formatted(VERSION);
+
     public static void main(String[] args) throws IOException {
-        new Main();
-    }
 
-    private ResultIndex storage;
+        String output = OUTPUT;
+        int port = PORT;
 
-    public Main() throws IOException {
-        System.out.println("Starting Server");
-
-        storage = new ResultIndex(new File(""));
-
-        ServerSocket server = new ServerSocket(8003);
-        while (!server.isClosed()) {
-            Socket socket = server.accept();
-            new Thread(() -> {
-                try {
-                    run(socket);
-                } catch (IOException e) {
-                    throw new RuntimeException(e);
+        for (int i = 0; i < args.length; i++) {
+            switch (args[i]) {
+                case "--output", "-o" -> {
+                    if (args.length == i + 1) {
+                        System.out.println("Error: --output requires an argument");
+                        return;
+                    }
+                    output = args[++i];
                 }
-            }).start();
-        }
-    }
-
-    public static final byte ID_LOGIN = 0x01;
-    public static final byte ID_DATA_REGISTER = 0x02;
-    public static final byte ID_TRANSMISSION_STATE = 0x03;
-    public static final byte ID_DATA = 0x04;
-
-    public void run(Socket socket) throws IOException {
-        StreamHandler stream = new StreamHandler(socket.getInputStream());
-
-        ResultWriter result = new ResultWriter(storage);
-        System.out.println(result.getDevice() + ": Connected");
-
-        while (stream.readId()) {
-            switch (stream.getId()) {
-
-                case ID_LOGIN:
-
-                    result.setDevice(stream.readString());
-                    System.out.println(result.getDevice() + ": Logged In successfully");
-
-                    break;
-
-                case ID_DATA_REGISTER:
-
-                    byte type = stream.readByte();
-                    String name = stream.readString();
-                    //System.out.println(result.getDevice() + ": registered column '" + name + "'");
-
-                    result.addColumn(name, type);
-
-                    break;
-
-                case ID_TRANSMISSION_STATE:
-
-                    if (stream.readBoolean()) {
-                        String id = result.startTransmission();
-                        System.out.println(result.getDevice() + ": Started transmission " + id);
-
-                    } else {
-                        String id = result.endTransmission();
-                        System.out.println(result.getDevice() + ": Ended transmission   " + id);
+                case "--port", "-p" -> {
+                    if (args.length == i + 1) {
+                        System.out.println("Error: --port requires an argument");
+                        return;
                     }
 
-                    break;
-
-                case ID_DATA:
-
-                    result.readData(stream);
-
-                    break;
-
+                    String portString = args[++i];
+                    try {
+                        port = Integer.parseInt(portString);
+                        if (port < 0 || port > 65535) throw new RuntimeException();
+                    } catch (Exception e) {
+                        System.out.println("Error: --port requires a valid integer between 0 and 65535");
+                        return;
+                    }
+                }
+                case "--help", "-h" -> {
+                    System.out.println(HELP_TEXT);
+                    return;
+                }
+                case "--version", "-v" -> {
+                    System.out.println(VERSION_TEXT);
+                    return;
+                }
+                default -> {
+                    System.out.printf("Error: Unrecognized option '%s'%n", args[i]);
+                    return;
+                }
             }
         }
 
-        System.out.println(result.getDevice() + ": Disconnected");
+        System.out.printf("Starting SensorServer %s%n", VERSION);
 
+        Server server = new Server(output, port);
+        server.accept();
     }
 }
