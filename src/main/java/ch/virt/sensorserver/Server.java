@@ -1,10 +1,13 @@
-package org.example;
+package ch.virt.sensorserver;
 
 import java.io.File;
 import java.io.IOException;
 import java.net.ServerSocket;
 import java.net.Socket;
 
+/**
+ * This class manages the server socket and accepts and reads clients
+ */
 public class Server {
 
     public static final byte ID_LOGIN = 0x01;
@@ -16,6 +19,12 @@ public class Server {
 
     private final ServerSocket server;
 
+    /**
+     * Creates a server
+     * @param path path to store data to
+     * @param port port to open server on
+     * @throws IOException failed to read or write to data path or failed to open port
+     */
     public Server(String path, int port) throws IOException {
         System.out.printf("Using output folder at '%s'%n", new File(path).getCanonicalPath());
         storage = new ResultIndex(new File(path));
@@ -24,6 +33,10 @@ public class Server {
         server = new ServerSocket(port);
     }
 
+    /**
+     * Start accepting clients, this method will block indefinitely and will fork into different threads
+     * @throws IOException failed to accept clients
+     */
     public void accept() throws IOException {
         System.out.println("Ready for clients...\n");
         while (!server.isClosed()) {
@@ -32,14 +45,19 @@ public class Server {
                 try {
                     run(socket);
                 } catch (IOException e) {
-                    System.err.println("Exception occurred in connection thread: " + e);
+                    System.err.println("Error: Exception occurred in connection thread: " + e);
                     e.printStackTrace();
                 }
             }).start();
         }
     }
 
-    public void run(Socket socket) throws IOException {
+    /**
+     * This method takes care of one single connection, accepting and reading data from it
+     * @param socket connection to read from
+     * @throws IOException something failed
+     */
+    private void run(Socket socket) throws IOException {
         StreamHandler stream = new StreamHandler(socket.getInputStream());
 
         ResultWriter result = new ResultWriter(storage);
@@ -87,7 +105,5 @@ public class Server {
         }
 
         System.out.println(result.getDevice() + ": Disconnected");
-
     }
-
 }

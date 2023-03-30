@@ -1,12 +1,10 @@
-package org.example;
+package ch.virt.sensorserver;
 
-import java.io.File;
 import java.io.IOException;
-import java.net.ServerSocket;
-import java.net.Socket;
-import java.nio.ByteBuffer;
-import java.sql.SQLOutput;
 
+/**
+ * This class mainly handles cli input and launches the server
+ */
 public class Main {
 
     private static final String VERSION = "v0.2";
@@ -26,12 +24,15 @@ public class Main {
                     -p, --port <PORT>       Set port number, default %d
                                 
                     -h, --help              Display help information and exit
-                    
                     """.formatted(OUTPUT, PORT);
 
     private static final String VERSION_TEXT = "SensorServer %s".formatted(VERSION);
 
-    public static void main(String[] args) throws IOException {
+    /**
+     * This is the main method
+     * ...yes indeed
+     */
+    public static void main(String[] args) {
 
         String output = OUTPUT;
         int port = PORT;
@@ -77,7 +78,12 @@ public class Main {
 
         System.out.printf("Starting SensorServer %s%n", VERSION);
 
-        Server server = new Server(output, port);
-        server.accept();
+        try {
+            Server server = new Server(output, port);
+            server.accept();
+        } catch (IOException e) {
+            System.out.println("Error: Server crashed because of '" + e + "'");
+            e.printStackTrace();
+        }
     }
 }

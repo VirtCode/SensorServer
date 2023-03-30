@@ -1,4 +1,4 @@
-package org.example;
+package ch.virt.sensorserver;
 
 import java.io.File;
 import java.io.FileWriter;
@@ -6,8 +6,10 @@ import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.stream.Collectors;
 
+/**
+ * This class manages the transmissions of a single device
+ */
 public class ResultWriter {
 
     public static final String DELIMITER = ",";
@@ -27,20 +29,30 @@ public class ResultWriter {
     boolean transmitting = false;
 
     private int size;
-    private List<String> names = new ArrayList<>();
-    private List<Byte> types = new ArrayList<>();
+    private final List<String> names = new ArrayList<>();
+    private final List<Byte> types = new ArrayList<>();
 
     private final ResultIndex index;
 
+    /**
+     * Creates a result writer
+     * @param index index to use
+     */
     public ResultWriter(ResultIndex index) {
         this.index = index;
     }
 
+    /**
+     * Registers a column for the given device
+     * @param name name of the column
+     * @param type type of the column specified by the byte indicating the type
+     */
     public void addColumn(String name, Byte type) {
 
         names.add(name);
         types.add(type);
 
+        // Recompute size
         int size = 0;
 
         for (Byte b : types) {
@@ -62,6 +74,11 @@ public class ResultWriter {
         this.size = size;
     }
 
+    /**
+     * Starts a transmission
+     * @return id of the started transmission
+     * @throws IOException failed to write to index or to open file for data storage
+     */
     public String startTransmission() throws IOException {
         currentId = index.requestId();
 
@@ -76,6 +93,11 @@ public class ResultWriter {
         return currentId;
     }
 
+    /**
+     * Ends the current transmission
+     * @return id of the ended transmission
+     * @throws IOException failed to close the data file
+     */
     public String endTransmission() throws IOException {
         if (!transmitting) return "";
 
@@ -87,14 +109,25 @@ public class ResultWriter {
         return currentId;
     }
 
+    /**
+     * @return current device name
+     */
     public String getDevice() {
         return device;
     }
 
+    /**
+     * @param device change the current device name
+     */
     public void setDevice(String device) {
         this.device = device;
     }
 
+    /**
+     * Reads a data packet *body* from a given stream
+     * @param stream stream to read data packet body from
+     * @throws IOException failed to read data from stream
+     */
     public void readData(StreamHandler stream) throws IOException {
         if (!transmitting) return;
 
